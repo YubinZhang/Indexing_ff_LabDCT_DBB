@@ -86,14 +86,17 @@ for threshold = [200 100 60 40]
         grains_refined = refine_candidate_grains(exp_spot_gv_list_usigned,grains,parameters,B,Ahkl_indexing,Ahkl_output,upper_bound_angle,refined_angle);
 
         %%% find large grains
-        grains_refined_updated = update_grains_spot_list(grains_refined,exp_spot_gv_list,parameters,B,Ahkl,checking_angle,'nearst');
+        grains_refined_updated = update_grains_spot_list(grains_refined,exp_spot_gv_list,parameters,B,Ahkl_indexing ,checking_angle,'nearst');
         [~,indx] = sort([grains_refined_updated(:).num_matched_gv]);
         grains_refined_updated = grains_refined_updated(indx);
         grains_refined_updated = grains_refined_updated(end:-1:1);
         if threshold >= 100
-            grains_refined_updated = grains_refined_updated([grains_refined_updated(:).num_matched_gv]>120); %can also use completeness value
+            %grains_refined_updated = grains_refined_updated([grains_refined_updated(:).num_matched_gv]>120); %can also use completeness value
+            grains_refined_updated = grains_refined_updated([grains_refined_updated(:).completeness]>0.25); %check if these grains are all good grains.
         else
-            grains_refined_updated = grains_refined_updated([grains_refined_updated(:).num_matched_gv]>150); %can also use completeness value
+            %grains_refined_updated = grains_refined_updated([grains_refined_updated(:).num_matched_gv]>150); %can also use completeness value
+            grains_refined_updated = grains_refined_updated([grains_refined_updated(:).completeness]>0.3); %check if these grains are all good grains.
+
         end
 
         %%% append the indexed grains to grains_index list
@@ -112,7 +115,7 @@ grains_index = unique_grains(grains_index,1);
 grains_index_3hkls = update_grains_spot_list(grains_index,exp_spot_gv_list,parameters,B,Ahkl_indexing,checking_angle,'nearst');
 
 % save results
-save Indexing_result_ori2p5_2025_01_23.mat '*'
+save Indexing_result_ori2p5_2025_02_24.mat '*'
 toc
 %% reindexing with lower completeness value
 if reindex
