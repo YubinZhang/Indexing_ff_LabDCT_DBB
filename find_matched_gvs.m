@@ -1,4 +1,7 @@
 function [match_gvs,num_match_gv,num_multi_match,Spot_list] = find_matched_gvs(exp_spot_gv_list,parameters,Pos,U,B,Ahkl,criangle,option)
+% function [match_gvs,num_match_gv,num_multi_match,Spot_list] = find_matched_gvs(exp_spot_gv_list,parameters,Pos,U,B,Ahkl,criangle,option)
+% matching experimental gvs to theoretical ones generated using forward
+% simulation
 
 num_match = 0;
 num_multi_match = 0;

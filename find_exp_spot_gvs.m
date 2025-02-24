@@ -1,10 +1,12 @@
 function [exp_spot_gv_list, exp_spot_details] = find_exp_spot_gvs(exp_imgs_bin,exp_imgs_intensity,P,pos)
+% function [exp_spot_gv_list, exp_spot_details] = find_exp_spot_gvs(exp_imgs_bin,exp_imgs_intensity,P,pos)
+% find experimental diffraction vectors from diffraction spots
 
 rot_start = P.setup.rotation.start;
 rot_step = P.setup.rotation.step;
 
 spot_num = 0;
-SPOTLIST =  struct('PixelList',       []);
+SPOTLIST =  struct('PixelList', [],'MeanIntensity', []);
 
 exp_spot_gv_list = zeros(100000,7);
 exp_spot_details(100000) = struct(SPOTLIST);

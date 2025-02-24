@@ -1,5 +1,5 @@
 function [Spot_list,diff_imgs] = forward_simulation_ff_LabDCT_v3(P,Pos,U,B,Ahkl)
-% function Spot_list = forward_simulation_ff_LabDCT_v2(P,Pos,U,D,S,B,Ahkl)
+% function Spot_list = forward_simulation_ff_LabDCT_v3(P,Pos,U,D,S,B,Ahkl)
 
 rot_start = P.setup.rotation.start;
 rot_step = P.setup.rotation.step;
