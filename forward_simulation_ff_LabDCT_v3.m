@@ -121,18 +121,6 @@ indx_beamstop = find(Spot_list(:,12) > beamstop(3) & Spot_list(:,12) < beamstop(
 
 Spot_list(indx_beamstop,:)=[];
 
-% j = 1; %remove spots within beamstop region
-% ind = [];
-% for i = 1:size(Spot_list,1)
-%     if and(and(Spot_list(i,12)>=beamstop(1),Spot_list(i,12)<=beamstop(2)),and(Spot_list(i,13)>=beamstop(3), Spot_list(:,13)<=beamstop(4)))
-%         ind(j) = i;
-%         j = j+1;
-%     end
-% end
-% if ~isempty(ind)
-%     Spot_list(ind)=[];
-% end
-
 if nargout ==2
     diff_imgs = zeros(detysize,detzsize,image_num,'uint16');
     

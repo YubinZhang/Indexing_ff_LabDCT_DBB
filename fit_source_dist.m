@@ -1,13 +1,13 @@
 function sou_pos = fit_source_dist(grains,parameters,B)
 
-x0 = [-100 0 0];
+x0 = parameters.setup.Lss;%[-100 0 0];
 ConstraintFunction = @constraintfun;
 options = optimoptions('fmincon','Display','iter','Algorithm','sqp-legacy');%'sqp'
 % options.InitialPopulationMatrix = x0(:);
 % % options = optimoptions(@ga,'UseVectorized',true);
 % options = optimoptions(@fmincon,'PlotFcn',{@gaplotbestf});
-LB = [-120 -1 -1];
-UB = [-90 1 1];
+LB = x0 + [-20 -1 -1];
+UB = x0 + [10 1 1];
 %this works fine
 [sou_pos,fval,~,~]  = fmincon(@(x) fit_sou_dist(x,grains,parameters,B),x0,[],[],[],[],LB,UB,[],options);
 
@@ -15,7 +15,8 @@ UB = [-90 1 1];
 function angle_sum = fit_sou_dist(x,grains,parameters,B)
 parameters.setup.Lss = x;
 
-Gv_angle = zeros(size(grains,2),400);
+
+Gv_angle = zeros(size(grains,2),1300);
 for i = 1:size(grains,2)
     if grains(i).good_grain
         spot_list = grains(i).spot_list;
@@ -35,7 +36,7 @@ for i = 1:size(grains,2)
         end
     end
 end
-angle_sum = sum(abs(Gv_angle(:)));
+angle_sum = sum(abs(Gv_angle(:).^2));
 
 function [c, ceq]= constraintfun(x)
 c = [];%sum(c(:));

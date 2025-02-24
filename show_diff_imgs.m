@@ -3,7 +3,7 @@ function diff_imgs = show_diff_imgs(spot_list,exp_spot_details,exp_imgs,paramete
 detysize = parameters.detector.detysize;
 detzsize = parameters.detector.detzsize;
 
-% diff_imgs_mask = zeros(size(exp_imgs));
+
 diff_imgs = zeros(size(exp_imgs));
 
 for i = 1:size(spot_list,1)

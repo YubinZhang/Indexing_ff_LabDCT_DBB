@@ -1,14 +1,14 @@
 function det_center = fit_detector_center(grains,parameters,B)
 
-%x0 = [parameters.detector.dety0,parameters.detector.detz0];
-x0 = [500 500];
+x0 = [parameters.detector.dety0,parameters.detector.detz0];
+%x0 = [500 500];
 %ConstraintFunction = @constraintfun;
 options = optimoptions('fmincon','Display','iter','Algorithm','sqp-legacy');%'sqp'
 % options.InitialPopulationMatrix = x0(:);
 % % options = optimoptions(@ga,'UseVectorized',true);
 % options = optimoptions(@fmincon,'PlotFcn',{@gaplotbestf});
-LB = [490 490];
-UB = [520 520];
+LB = x0 - [10 10];%[490 490];
+UB = x0 + [10 10];%[520 520];
 %this works fine
 [det_center,fval,~,~]  = fmincon(@(x) fit_det_center(x,grains,parameters,B),x0,[],[],[],[],LB,UB,[],options);
 
@@ -18,7 +18,7 @@ parameters.detector.dety0 = x(1);
 parameters.detector.detz0 = x(2);
 
 
-Gv_angle = zeros(size(grains,2),400);
+Gv_angle = zeros(size(grains,2),1300);
 for i = 1:size(grains,2)
     if grains(i).good_grain
         spot_list = grains(i).spot_list;
@@ -38,5 +38,5 @@ for i = 1:size(grains,2)
         end
     end
 end
-angle_sum = sum(abs(Gv_angle(:)));
+angle_sum = sum(abs(Gv_angle(:).^2));
 

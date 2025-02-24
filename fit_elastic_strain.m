@@ -41,7 +41,7 @@ for i = 1:size(grains.spot_list,1)
     Gv(i,:) = Omega*x*grains.spot_list(i,8:10)';
     Gv_angle(i) = acos(dot(normr(Gv(i,:)),normr(refined_Gvs(i,:))));
 end
-angle_sum = sum(abs(Gv_angle));
+angle_sum = sum(abs(Gv_angle).^2);
 
 
 function [c ceq]=nodilat(x,B)

@@ -1,12 +1,13 @@
 function det_dist = fit_detector_dist(grains,parameters,B)
-x0 = 100;
+
+x0 = parameters.setup.Lsd;%100;
 %ConstraintFunction = @constraintfun;
 options = optimoptions('fmincon','Display','iter','Algorithm','sqp-legacy');%'sqp'
 % options.InitialPopulationMatrix = x0(:);
 % % options = optimoptions(@ga,'UseVectorized',true);
 % options = optimoptions(@fmincon,'PlotFcn',{@gaplotbestf});
-LB = 95;
-UB = 120;
+LB = x0-10;%95;
+UB = x0+10;%120;
 %this works fine
 [det_dist,fval,~,~]  = fmincon(@(x) fit_det_dist(x,grains,parameters,B),x0,[],[],[],[],LB,UB,[],options);
 
@@ -14,7 +15,7 @@ UB = 120;
 function angle_sum = fit_det_dist(x,grains,parameters,B)
 parameters.setup.Lsd = x;
 
-Gv_angle = zeros(size(grains,2),400);
+Gv_angle = zeros(size(grains,2),1300);
 for i = 1:size(grains,2)
     if grains(i).good_grain
         spot_list = grains(i).spot_list;

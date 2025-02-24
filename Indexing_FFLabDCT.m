@@ -55,8 +55,6 @@ for i = 1:image_num
     exp_imgs_bg_scale_corr_medfiltered(:,:,i) = medfilt2(exp_imgs_bg_scale_corr(:,:,i));
 end 
 
-imshow3D(exp_imgs_bg_scale_corr_medfiltered,[0 200])
-
 %% indexing with different thresholding
 % defined maximum angular deviation caused by grain center of mass 
 delta = 0.5/100/degree;
@@ -68,7 +66,6 @@ for threshold = [200 100 60 40]
     for i = 1:image_num
         exp_imgs_bg_corr_bin(:,:,i) = bwareaopen(exp_imgs_bg_corr_bin(:,:,i),3);
     end
-    % figure,imshow3D(exp_imgs_bg_corr_bin)
     
     % determine experimental g-vectors 
     [exp_spot_gv_list, exp_spot_details] = find_exp_spot_gvs(exp_imgs_bg_corr_bin,exp_imgs_bg_scale_corr,parameters,Pos);
@@ -169,10 +166,7 @@ if fitdetector
     sou_pos = fit_source_dist(grains_index,parameters,B)
 %      parameters.setup.Lss = sou_pos;
     
-%     %% fit detector tilt
-%     det_tilt = fit_det_tilt(grains_index,parameters,B)
-%     parameters.detector.tilt = det_tilt;
-     %% fit detector tilt_new
+    %% fit detector tilt_new
     det_tilt1 = fit_det_tilt_new(grains_index,parameters)
 
     tilt_x = det_tilt1(1);
