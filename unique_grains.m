@@ -1,7 +1,12 @@
 function [grains_unique,indx] = unique_grains(grains,criangle)
 mis = zeros(size(grains,2));
 grains_unique_ind = ones(size(grains));
+[~,indx] = sort([grains(:).num_matched_gv]);
+grains = grains(indx);
+grains = grains(end:-1:1);
+
 indx = [];
+if ~isempty(grains)
 for i = 1:size(grains,2)
     for j = i+1:size(grains,2)
         mis(i,j)=misori2(grains(i).refined_ori_matrix',grains(j).refined_ori_matrix');
@@ -14,4 +19,8 @@ for i = 1:size(grains,2)
         indx = [indx,ind];
     end
 end
+
 grains_unique = grains(find(grains_unique_ind==1));
+else 
+    grains_unique = grains;
+end

@@ -14,8 +14,8 @@ parfor i = 1:size(grains_old,2)
     grains(i).num_matched_gv = num_match_gv;
 
     Spot_list = forward_simulation_ff_LabDCT_v3(parameters,pos,U,B,Ahkl);
-    grains(i).expected = size(Spot_list,1);
-    grains(i).completeness = grains(i).num_matched_gv/grains(i).expected;
+    %grains(i).expected = size(Spot_list,1);
+    grains(i).completeness = grains(i).num_matched_gv/size(Spot_list,1);%grains(i).expected;
     disp( ['grain#:' num2str(i) ', size of matched gvs' '(' num2str(cri_angle) ') = ' num2str(size(match_gvs,1)) '; completeness = ' num2str(grains(i).completeness)])
 
 end

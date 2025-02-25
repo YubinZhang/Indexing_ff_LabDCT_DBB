@@ -16,7 +16,7 @@ for rot_i = rot_start:rot_step:rot_end
     theo_spot_rot_i = Spot_list(Spot_list(:,2)==rot_i,:);
     if ~isempty(theo_spot_rot_i)
         exp_spot_rot_i = exp_spot_gv_list(exp_spot_gv_list(:,2)==rot_i,:);
-        
+
         for spot_i = 1:size(theo_spot_rot_i,1)
             angle = acosd(dot(exp_spot_rot_i(:,3:5)',repmat(normr(theo_spot_rot_i(spot_i,7:9))',1,size(exp_spot_rot_i,1))));
             ind = find(angle<criangle);% add a option and a criterion to select only the one with min angle deviation
@@ -25,8 +25,8 @@ for rot_i = rot_start:rot_step:rot_end
                 distance = sqrt(sum((exp_spot_rot_i(:,6:7)-repmat(theo_spot_rot_i(spot_i,12:13),size(exp_spot_rot_i,1),1)).^2,2));
                 [~,b] = min(distance);
 
-                if min(distance)<5 && angle(b)<criangle 
-                    
+                if min(distance)<5 && angle(b)<criangle
+
                     match_gvs(num_match+1,1:7) = exp_spot_rot_i(b,1:7);
                     match_gvs(num_match+1,8:10) = theo_spot_rot_i(spot_i,3:5);
                     match_gvs(num_match+1,11:13) = theo_spot_rot_i(spot_i,7:9);
@@ -47,7 +47,7 @@ for rot_i = rot_start:rot_step:rot_end
                             match_gvs(num_match+1:num_match + length(ind),16:17) = repmat(theo_spot_rot_i(spot_i,10:11),length(ind),1);%theo_spot_rot_i(spot_i,10:11);
                             match_gvs(num_match+1:num_match + length(ind),18) = angle(ind);
 
-%                             match_gvs(num_match+1:num_match + length(ind),16) = angle(ind);
+                            %                             match_gvs(num_match+1:num_match + length(ind),16) = angle(ind);
                             num_match = num_match + length(ind);
                             num_match_gv = num_match_gv +1;
                             %if length(ind) > 1
@@ -62,7 +62,7 @@ for rot_i = rot_start:rot_step:rot_end
                             match_gvs(num_match+1,16:17) = theo_spot_rot_i(spot_i,10:11);
                             match_gvs(num_match+1,18) = angle(b);
 
-%                             match_gvs(num_match+1,16) = angle(b);
+                            %                             match_gvs(num_match+1,16) = angle(b);
                             num_match = num_match + 1;
                             num_match_gv = num_match_gv +1;
                             %if length(ind) > 1
@@ -77,7 +77,7 @@ for rot_i = rot_start:rot_step:rot_end
                         match_gvs(num_match+1,14:15) = theo_spot_rot_i(spot_i,12:13);
                         match_gvs(num_match+1,16:17) = theo_spot_rot_i(spot_i,10:11);
                         match_gvs(num_match+1,18) = angle(ind);
-% match_gvs(num_match+1,16) = angle(ind);
+                        % match_gvs(num_match+1,16) = angle(ind);
                         num_match = num_match + 1;
                         num_match_gv = num_match_gv +1;
                         %                     elseif strcmp(option,'nearst')

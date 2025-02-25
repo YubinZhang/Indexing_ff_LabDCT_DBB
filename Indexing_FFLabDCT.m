@@ -16,18 +16,15 @@ SS = specimenSymmetry('orthorhombic');
 % Generate a uniform orientation grid in the fundamental zone
 cry_orien = equispacedSO3Grid(CS, 'resolution', resolution);
 
-%%
-grains_index = [];
-
 %% load experimental data
 img_y = detysize/binning;
 img_z = detzsize/binning;
 exp_imgs = zeros(img_y,img_z,image_num);
 
 for i = 1:image_num
-     im_i = imread(['FF_LabDCT_pure_iron\Iron_sample_tomo-B_Export' num2str(i,'%0.4d') '.tiff']);    
-%       im_i = imread(['Al_ff2/proj_' num2str(i,'%0.4d') '.tif']);  %far-field single crystal Al  
-%       im_i = flipud(im_i);
+    im_i = imread(['FF_LabDCT_pure_iron\Iron_sample_tomo-B_Export' num2str(i,'%0.4d') '.tiff']);
+    %       im_i = imread(['Al_ff2/proj_' num2str(i,'%0.4d') '.tif']);  %far-field single crystal Al
+    %       im_i = flipud(im_i);
     exp_imgs(:,:,i) = im_i;
 end
 
@@ -53,31 +50,36 @@ exp_imgs_bg_scale_corr = exp_imgs_scaled - repmat(bg_scale,1,1,image_num);
 exp_imgs_bg_scale_corr_medfiltered = zeros(img_y,img_z,image_num);
 for i = 1:image_num
     exp_imgs_bg_scale_corr_medfiltered(:,:,i) = medfilt2(exp_imgs_bg_scale_corr(:,:,i));
-end 
+end
 
 %% indexing with different thresholding
-% defined maximum angular deviation caused by grain center of mass 
+% defined maximum angular deviation caused by grain center of mass
 delta = 0.5/100/degree;
+upper_bound_angle = Ori_res*sqrt(3)/2+delta; %delta is deviation angle caused by grain center of mass deviation
+refined_angle = 1;
+
+%
+grains_index = [];
+final_completeness_threshold = 0.3;
 
 for threshold = [200 100 60 40]
     exp_imgs_bg_corr_bin = exp_imgs_bg_scale_corr_medfiltered>threshold;
-    
+
     % remove small spots less than 3 pixels
     for i = 1:image_num
         exp_imgs_bg_corr_bin(:,:,i) = bwareaopen(exp_imgs_bg_corr_bin(:,:,i),3);
     end
-    
-    % determine experimental g-vectors 
+
+    % determine experimental g-vectors
     [exp_spot_gv_list, exp_spot_details] = find_exp_spot_gvs(exp_imgs_bg_corr_bin,exp_imgs_bg_scale_corr,parameters,Pos);
+
 
     % indexing using DBB
     for cri_completeness = [0.8,0.7,0.6,0.5,0.4]
-        upper_bound_angle = Ori_res*sqrt(3)/2+delta; %delta is deviation angle caused by grain center of mass deviation
-        refined_angle = 1;
-
+        
         %%% update input and output
         grains_index = update_grains_spot_list(grains_index,exp_spot_gv_list,parameters,B,Ahkl,checking_angle,'nearst');
-        [exp_spot_details,exp_spot_gv_list_usigned,exp_spot_gv_list_signed_dual,exp_spot_gv_list_signed] = sign_exp_spot_gv_list(exp_spot_gv_list,exp_spot_details,grains_index,exp_imgs_bg_scale_corr,parameters);
+        [exp_spot_details,exp_spot_gv_list_usigned,~,~] = sign_exp_spot_gv_list(exp_spot_gv_list,exp_spot_details,grains_index,exp_imgs_bg_scale_corr,parameters);
 
         %%% first matching - find candidate orientations
         grains = first_match(exp_spot_gv_list_usigned,cry_orien,parameters,Pos,B,Ahkl_indexing,upper_bound_angle,cri_completeness);
@@ -86,36 +88,32 @@ for threshold = [200 100 60 40]
         grains_refined = refine_candidate_grains(exp_spot_gv_list_usigned,grains,parameters,B,Ahkl_indexing,Ahkl_output,upper_bound_angle,refined_angle);
 
         %%% find large grains
-        grains_refined_updated = update_grains_spot_list(grains_refined,exp_spot_gv_list,parameters,B,Ahkl_indexing ,checking_angle,'nearst');
-        [~,indx] = sort([grains_refined_updated(:).num_matched_gv]);
-        grains_refined_updated = grains_refined_updated(indx);
-        grains_refined_updated = grains_refined_updated(end:-1:1);
-        if threshold >= 100
-            %grains_refined_updated = grains_refined_updated([grains_refined_updated(:).num_matched_gv]>120); %can also use completeness value
-            grains_refined_updated = grains_refined_updated([grains_refined_updated(:).completeness]>0.25); %check if these grains are all good grains.
-        else
-            %grains_refined_updated = grains_refined_updated([grains_refined_updated(:).num_matched_gv]>150); %can also use completeness value
-            grains_refined_updated = grains_refined_updated([grains_refined_updated(:).completeness]>0.3); %check if these grains are all good grains.
+        grains_refined = update_grains_spot_list(grains_refined,exp_spot_gv_list,parameters,B,Ahkl_indexing,checking_angle,'nearst');
 
-        end
-
-        %%% append the indexed grains to grains_index list
-        if isempty(grains_index)
-            grains_index = grains_refined_updated;
-        else
-            s = size(grains_index,2);
-            for i = 1:size(grains_refined_updated,2)
-                grains_index(i+s) = grains_refined_updated(i);
+        if ~isempty(grains_refined)
+            %%% selection of good grains.
+            grains_refined_updated = grains_refined([grains_refined(:).completeness]>final_completeness_threshold); 
+            
+            %%% append the indexed grains to grains_index list
+            if isempty(grains_index)
+                grains_index = grains_refined_updated;
+            else
+                s = size(grains_index,2);
+                for i = 1:size(grains_refined_updated,2)
+                    grains_index(i+s) = grains_refined_updated(i);
+                end
             end
         end
     end
 end
-% remove duplicate 
-grains_index = unique_grains(grains_index,1);
+% remove duplicate
+grains_index = unique_grains(grains_index,.1);
+grains_index = update_grains_spot_list(grains_index,exp_spot_gv_list,parameters,B,Ahkl,checking_angle,'nearst');
+[exp_spot_details,exp_spot_gv_list_usigned,exp_spot_gv_list_signed_dual,exp_spot_gv_list_signed] = sign_exp_spot_gv_list(exp_spot_gv_list,exp_spot_details,grains_index,exp_imgs_bg_scale_corr,parameters);
 grains_index_3hkls = update_grains_spot_list(grains_index,exp_spot_gv_list,parameters,B,Ahkl_indexing,checking_angle,'nearst');
 
 % save results
-save Indexing_result_ori2p5_2025_02_24.mat '*'
+save Indexing_results\Indexing_result_ori2p5_2025_02_24.mat '*'
 toc
 %% reindexing with lower completeness value
 if reindex
@@ -127,48 +125,52 @@ if reindex
     upper_bound_angle = Ori_res*sqrt(3)/2+delta;
     cri_completeness = 0.35;
     refined_angle = 1;
-    
+
     % first matching - find candidate orientations
     grains = first_match(exp_spot_gv_list_usigned,cry_orien,parameters,Pos,B,Ahkl_indexing,upper_bound_angle,cri_completeness);
-    
+
     %%% refine grain orientations and remove duplicates (should these be merged?)
     grains_refined = refine_candidate_grains(exp_spot_gv_list_usigned,grains,parameters,B,Ahkl_indexing,Ahkl_output,upper_bound_angle,refined_angle);
-    
+
     %%% find large grains
-    grains_refined_updated = update_grains_spot_list(grains_refined,exp_spot_gv_list,parameters,B,Ahkl,checking_angle,'nearst');
-    [~,indx] = sort([grains_refined_updated(:).num_matched_gv]);
-    grains_refined_updated = grains_refined_updated(indx);
-    grains_refined_updated = grains_refined_updated(end:-1:1);
-    grains_refined_updated = grains_refined_updated([grains_refined_updated(:).num_matched_gv]>150); %check if these grains are all good grains.
-    %%% append the indexed grains to grains_index list
-    if isempty(grains_reindex)
-        grains_reindex = grains_refined_updated;
-    else
-        s = size(grains_reindex,2);
-        for i = 1:size(grains_refined_updated,2)
-            grains_reindex(i+s) = grains_refined_updated(i);
+    if ~isempty(grains_refined)
+        grains_refined_updated = grains_refined([grains_refined(:).completeness]>0.3); %check if these grains are all good grains.
+
+        %         grains_refined_updated = update_grains_spot_list(grains_refined,exp_spot_gv_list,parameters,B,Ahkl,checking_angle,'nearst');
+        %         [~,indx] = sort([grains_refined_updated(:).num_matched_gv]);
+        %         grains_refined_updated = grains_refined_updated(indx);
+        %         grains_refined_updated = grains_refined_updated(end:-1:1);
+        %         grains_refined_updated = grains_refined_updated([grains_refined_updated(:).num_matched_gv]>150); %check if these grains are all good grains.
+        %%% append the indexed grains to grains_index list
+        if isempty(grains_reindex)
+            grains_reindex = grains_refined_updated;
+        else
+            s = size(grains_reindex,2);
+            for i = 1:size(grains_refined_updated,2)
+                grains_reindex(i+s) = grains_refined_updated(i);
+            end
         end
     end
+    grains_reindex = update_grains_spot_list(grains_reindex,exp_spot_gv_list,parameters,B,Ahkl,checking_angle,'nearst');
 end
 
-grains_reindex = update_grains_spot_list(grains_reindex,exp_spot_gv_list,parameters,B,Ahkl,checking_angle,'nearst');
 
-%% fit setup geometry - typically involves multiple iterations, 
+%% fit setup geometry - typically involves multiple iterations,
 %%% starting with the large grains indexed with high confidence and relaxed criteria
 if fitdetector
     %% fit detector center
     det_center = fit_detector_center(grains_index,parameters,B)
-%     parameters.detector.dety0 = det_center(1);
-%     parameters.detector.detz0 = det_center(2);
-    
+    %     parameters.detector.dety0 = det_center(1);
+    %     parameters.detector.detz0 = det_center(2);
+
     %% fit detector distance
     det_dist = fit_detector_dist(grains_index,parameters,B)
-%       parameters.setup.Lsd = det_dist;
-    
+    %       parameters.setup.Lsd = det_dist;
+
     %% fit source distance (this should not be fitted in this way, maybe a better way?)
     sou_pos = fit_source_dist(grains_index,parameters,B)
-%      parameters.setup.Lss = sou_pos;
-    
+    %      parameters.setup.Lss = sou_pos;
+
     %% fit detector tilt_new
     det_tilt1 = fit_det_tilt_new(grains_index,parameters)
 
@@ -183,23 +185,23 @@ if fitdetector
     parameters.detector.tilt_y = tilt_y;
     parameters.detector.tilt_z = tilt_z;
     parameters.detector.tilt = Rz*Ry*Rx;
-    
+
 end
 
 %% Check results
 if check_result
     for i = 1
 
-    grains_updated = update_grains_spot_list(grains_index(i),exp_spot_gv_list,parameters,B,Ahkl,checking_angle,'nearst');
-    grains_updated.spot_list(:,19) =  grains_updated.spot_list(:,6) - grains_updated.spot_list(:,14);
-    grains_updated.spot_list(:,20) =  grains_updated.spot_list(:,7) - grains_updated.spot_list(:,15);
-    figure(1),imshow(sum(show_diff_imgs(grains_updated.spot_list,exp_spot_details,exp_imgs_bg_scale_corr,parameters),3), [0 500])
-    hold on
-    plot(grains_updated.spot_list(:,6),grains_updated.spot_list(:,7),'ro')
-    plot(grains_updated.spot_list(:,14),grains_updated.spot_list(:,15),'b+')
-    quiver(grains_updated.spot_list(:,14),grains_updated.spot_list(:,15),grains_updated.spot_list(:,19),grains_updated.spot_list(:,20))
-    %ES_tensor(:,:,i) = fit_elastic_strain(grains_updated,B,parameters);
-    hold off
+        grains_updated = update_grains_spot_list(grains_index(i),exp_spot_gv_list,parameters,B,Ahkl,checking_angle,'nearst');
+        grains_updated.spot_list(:,19) =  grains_updated.spot_list(:,6) - grains_updated.spot_list(:,14);
+        grains_updated.spot_list(:,20) =  grains_updated.spot_list(:,7) - grains_updated.spot_list(:,15);
+        figure(1),imshow(sum(show_diff_imgs(grains_updated.spot_list,exp_spot_details,exp_imgs_bg_scale_corr,parameters),3), [0 500])
+        hold on
+        plot(grains_updated.spot_list(:,6),grains_updated.spot_list(:,7),'ro')
+        plot(grains_updated.spot_list(:,14),grains_updated.spot_list(:,15),'b+')
+        quiver(grains_updated.spot_list(:,14),grains_updated.spot_list(:,15),grains_updated.spot_list(:,19),grains_updated.spot_list(:,20))
+        %ES_tensor(:,:,i) = fit_elastic_strain(grains_updated,B,parameters);
+        hold off
     end
 end
 
@@ -251,7 +253,7 @@ hold off
 %% refit the grains using all spots associated with
 % grains_index_updated1 = update_grains_spot_list(grains_index,exp_spot_gv_list,parameters,B,Ahkl,checking_angle,'nearst');
 grains_index_updated = grains_index;
-for i = 1:length(grains_index)    
+for i = 1:length(grains_index)
     [grains_index_updated(i).refined_ori_matrix,grains_index_updated(i).refined_pos] = refinegrain(grains_index(i).spot_list,parameters,grains_index(i).refined_ori_matrix,B,grains_index(i).refined_pos);
 end
 grains_index_updated = update_grains_spot_list(grains_index_updated,exp_spot_gv_list,parameters,B,Ahkl,checking_angle,'nearst');
