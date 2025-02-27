@@ -1,11 +1,11 @@
 function e = fit_elastic_strain(grains,B,parameters)
-UB = grains.refined_ori_matrix*B;
+UBI_init = grains.refined_ori_matrix * B; % Initial UBI matrix
 %%%
 options = optimoptions('fmincon','Display','off');%'iter','Algorithm','sqp-legacy');%'sqp''off');%
 LB = -ones(3)*B;
 UB = ones(3)*B;
 
-[UBI,fval,~,~]  = fmincon(@(x) min_vec_angle(x,grains,parameters),UB,[],[],[],[],LB,UB,@(y) nodilat(y,B),options);
+[UBI,fval,~,~]  = fmincon(@(x) min_vec_angle(x,grains,parameters),UBI_init,[],[],[],[],LB,UB,@(y) nodilat(y,B),options);
 
 % [UBI,fval, exitflag, output] = fmincon(@(x) min_vec_angle(x,grains,parameters),UB,[],[],[],[],[],[],@(y)nodilat(y,B));
 % UBI = ga(@(x) sum(abs(acos(dot(Qvs_index,normc(reshape(x,3,3)*hkl))).^2)),9,[],[],[],[],[],[],@(y)nodilat(y,B));
