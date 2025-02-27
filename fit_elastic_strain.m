@@ -39,7 +39,14 @@ for i = 1:size(grains.spot_list,1)
     refined_Gvs(i,:) = spotpos2gvector(spots,parameters,pos_rot);
     
     Gv(i,:) = Omega*x*grains.spot_list(i,8:10)';
-    Gv_angle(i) = acos(dot(normr(Gv(i,:)),normr(refined_Gvs(i,:))));
+    %Gv_angle(i) = acos(dot(normr(Gv(i,:)),normr(refined_Gvs(i,:))));
+    
+    % Ensure numerical stability for acos by clamping values to [-1,1]
+    dot_product = dot(normr(Gv(i, :)), normr(refined_Gvs(i, :)));
+    dot_product = max(min(dot_product, 1), -1); % Avoid NaN due to floating point errors
+
+    % Compute angular difference
+    Gv_angle(i) = acos(dot_product);
 end
 angle_sum = sum(abs(Gv_angle).^2);
 
