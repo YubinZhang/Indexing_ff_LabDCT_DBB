@@ -7,6 +7,7 @@ num_match = 0;
 num_multi_match = 0;
 num_match_gv = 0;
 match_gvs = [];
+
 rot_start = parameters.setup.rotation.start;
 rot_step = parameters.setup.rotation.step;
 rot_end = parameters.setup.rotation.end;
@@ -97,5 +98,7 @@ for rot_i = rot_start:rot_step:rot_end
         end
     end
 end
+% Trim unused preallocated space
+match_gvs(num_match+1:end, :) = [];
 end
 

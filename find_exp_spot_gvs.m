@@ -32,5 +32,7 @@ for i = 1:size(exp_imgs_bin,3)
         spot_num = spot_num + numBlobs;
     end
 end
-exp_spot_gv_list(spot_num +1:end,:) = [];
-exp_spot_details(spot_num +1:end) = [];
+if spot_num<100000
+    exp_spot_gv_list(spot_num +1:end,:) = [];
+    exp_spot_details(spot_num +1:end) = [];
+end

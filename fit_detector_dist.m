@@ -1,11 +1,9 @@
 function det_dist = fit_detector_dist(grains,parameters,B)
 
 x0 = parameters.setup.Lsd;%100;
-%ConstraintFunction = @constraintfun;
+
 options = optimoptions('fmincon','Display','iter','Algorithm','sqp-legacy');%'sqp'
-% options.InitialPopulationMatrix = x0(:);
-% % options = optimoptions(@ga,'UseVectorized',true);
-% options = optimoptions(@fmincon,'PlotFcn',{@gaplotbestf});
+
 LB = x0-10;%95;
 UB = x0+10;%120;
 %this works fine
@@ -31,7 +29,11 @@ for i = 1:size(grains,2)
             refined_Gvs(j,:) = spotpos2gvector(spots,parameters,pos_rot);
             
             Gv(j,:) = Omega*U*B*spot_list(j,8:10)';
-            Gv_angle(i,j) = acos(dot(normr(Gv(j,:)),normr(refined_Gvs(j,:))));
+            % Compute angle difference (ensure numerical stability)
+            dot_product = dot(normr(Gv(j, :)), normr(refined_Gvs(j, :)));
+            dot_product = max(min(dot_product, 1), -1); % Avoid NaN due to floating-point errors
+            Gv_angle(i,j) = acos(dot_product);
+            %Gv_angle(i,j) = acos(dot(normr(Gv(j,:)),normr(refined_Gvs(j,:))));
         end
     end
 end

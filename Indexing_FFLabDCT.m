@@ -113,7 +113,7 @@ grains_index = update_grains_spot_list(grains_index,exp_spot_gv_list,parameters,
 grains_index_3hkls = update_grains_spot_list(grains_index,exp_spot_gv_list,parameters,B,Ahkl_indexing,checking_angle,'nearst');
 
 % save results
-save Indexing_results\Indexing_result_ori2p5_2025_02_24.mat '*'
+save Indexing_results\Indexing_result_ori2p5_2025_02_25.mat '*'
 toc
 %% reindexing with lower completeness value
 if reindex
@@ -200,7 +200,7 @@ if check_result
         plot(grains_updated.spot_list(:,6),grains_updated.spot_list(:,7),'ro')
         plot(grains_updated.spot_list(:,14),grains_updated.spot_list(:,15),'b+')
         quiver(grains_updated.spot_list(:,14),grains_updated.spot_list(:,15),grains_updated.spot_list(:,19),grains_updated.spot_list(:,20))
-        %ES_tensor(:,:,i) = fit_elastic_strain(grains_updated,B,parameters);
+        ES_tensor(:,:,i) = fit_elastic_strain(grains_updated,B,parameters);
         hold off
     end
 end

@@ -3,10 +3,8 @@ function det_tilt = fit_det_tilt_new(grains,parameters)
 
 x0 = [0 0 0];
 ConstraintFunction = @constraintfun;
-options = optimoptions('fmincon','Display','iter','Algorithm','sqp-legacy');%'sqp'
-% options.InitialPopulationMatrix = x0(:);
+options = optimoptions('fmincon','Display','iter','Algorithm','sqp-legacy','UseParallel', true);%'sqp'
 % % options = optimoptions(@ga,'UseVectorized',true);
-% options = optimoptions(@fmincon,'PlotFcn',{@gaplotbestf});
 LB = [-1 -1 -1 ];%-ones(3);
 UB = [1 1 1 ];%ones(3);
 %this works fine
@@ -40,18 +38,17 @@ pixelzsize = parameters.detector.pixelzsize;
 
 
 % Gv_angle = zeros(size(grains,2),400);
-dist = 0;
-for i = 1:size(grains,2)
+dist_array = zeros(size(grains,2), 1);
+
+parfor i = 1:size(grains,2)
     if grains(i).good_grain
-%         grains_updated = update_grains_spot_list(grains(i),exp_spot_gv_list,parameters,B,Ahkl,check_angle,'nearst');
-% 
-%         dist = dist + sum(sqrt((grains_updated.spot_list(:,14)-grains_updated.spot_list(:,6)).^2+(grains_updated.spot_list(:,15)-grains_updated.spot_list(:,7).^2)));
-%         % 
+
         spot_list = grains(i).spot_list;
         %pos = x(4:6);
         pos = grains(i).refined_pos;
-        U = grains(i).refined_ori_matrix;
-        
+        %U = grains(i).refined_ori_matrix;
+        grain_dist = 0; % Temporary variable for storing distance
+
         for j = 1:size(spot_list,1)            
             rot = spot_list(j,2);
             Omega = euler2u(rot*pi/180,0,0);
@@ -63,7 +60,6 @@ for i = 1:size(grains,2)
             %%%%%%
             alpha = atan(sqrt((voxelpos(2)-Lsam2sou(2))^2+(voxelpos(3)-Lsam2sou(3))^2)/(voxelpos(1)-Lsam2sou(1)));
         
-            
             %diffraction center
             N_det = parameters.detector.tilt*[-1 0 0]';
             center_vector = normc(cross(normc(cross(voxelpos,voxelpos-Lsam2sou')), N_det));
@@ -91,11 +87,10 @@ for i = 1:size(grains,2)
             
             dety = dety0+diff_vector_rot(2,:)/pixelysize;
             detz = detz0+diff_vector_rot(3,:)/pixelzsize;
-
-%             dety = dety0+diff_vector(2,:)/pixelysize;
-%             detz = detz0+diff_vector(3,:)/pixelzsize;
         
-            dist = dist + norm(spot_list(j,6:7)-[dety detz]);
+            % Compute distance
+            grain_dist = grain_dist + norm(spot_list(j, 6:7) - [dety detz]);
+            %dist = dist + norm(spot_list(j,6:7)-[dety detz]);
 
             %%%%
             %refined_Gvs(j,:) = spotpos2gvector(spots,parameters,pos_rot);
@@ -103,10 +98,11 @@ for i = 1:size(grains,2)
             %Gv(j,:) = Omega*U*B*spot_list(j,8:10)';
             %Gv_angle(i,j) = acos(dot(normr(Gv(j,:)),normr(refined_Gvs(j,:))));
         end
+        dist_array(i) = grain_dist;
     end
-%     x,dist
 end
-% angle_sum = sum(abs(Gv_angle(:)));
+% Sum over all grains to get final distance value
+dist = sum(dist_array);
 
 function [c, ceq]= constraintfun(x)
 % tilt_x = x(1);

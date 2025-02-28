@@ -1,12 +1,8 @@
 function [refined_ori,refined_pos,refined_error] = refinegrain(grain_spot_list,parameters,U,B,pos)
 
-% x0 = U;
 x0 = [U(:);pos']';
 ConstraintFunction = @(x) constraintfun(x);
 options = optimoptions('fmincon','UseParallel',true,'Display','off');%'iter','Algorithm','sqp-legacy');%'sqp''off');%
-% options.InitialPopulationMatrix = x0(:);
-% % options = optimoptions(@ga,'UseVectorized',true);
-% options = optimoptions(@fmincon,'PlotFcn',{@gaplotbestf});
 LB = [-1 -1 -1 -1 -1 -1 -1 -1 -1 -0.5 -0.5 -0.5];
 UB = [1 1 1 1 1 1 1 1 1 0.5 0.5 0.5];
 %this works fine
@@ -34,9 +30,13 @@ for i = 1:size(spot_list,1)
     refined_Gvs(i,:) = spotpos2gvector(spots,parameters,pos_rot);
     
     Gv(i,:) = Omega*U*B*spot_list(i,8:10)';
-    Gv_angle(i) = acos(dot(normr(Gv(i,:)),normr(refined_Gvs(i,:))));
+    % Compute angle difference (ensure numerical stability)
+    dot_product = dot(normr(Gv(i, :)), normr(refined_Gvs(i, :)));
+    dot_product = max(min(dot_product, 1), -1); % Avoid NaN due to floating-point errors
+    Gv_angle(i) = acos(dot_product);
+    %Gv_angle(i) = acos(dot(normr(Gv(i,:)),normr(refined_Gvs(i,:))));
 end
-angle_sum = sum(abs(Gv_angle));
+angle_sum = sum(abs(Gv_angle).^2);
 
 function [c, ceq]= constraintfun(x)
 U = reshape(x(1:9),3,3);

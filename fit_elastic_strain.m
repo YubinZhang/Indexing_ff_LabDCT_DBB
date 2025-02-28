@@ -1,7 +1,7 @@
 function e = fit_elastic_strain(grains,B,parameters)
 UBI_init = grains.refined_ori_matrix * B; % Initial UBI matrix
 %%%
-options = optimoptions('fmincon','Display','off');%'iter','Algorithm','sqp-legacy');%'sqp''off');%
+options = optimoptions('fmincon','Display','off','Algorithm','sqp-legacy');%'iter','Algorithm','sqp-legacy');%'sqp''off');%
 LB = -ones(3)*B;
 UB = ones(3)*B;
 
