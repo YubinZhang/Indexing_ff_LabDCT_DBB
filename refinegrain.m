@@ -36,7 +36,7 @@ for i = 1:size(spot_list,1)
     Gv_angle(i) = acos(dot_product);
     %Gv_angle(i) = acos(dot(normr(Gv(i,:)),normr(refined_Gvs(i,:))));
 end
-angle_sum = sum(abs(Gv_angle).^2);
+angle_sum = sum(abs(Gv_angle));
 
 function [c, ceq]= constraintfun(x)
 U = reshape(x(1:9),3,3);
